@@ -51,7 +51,7 @@ jobs:
       # Arrancamos LocalStack con DEBUG para ver el docker create completo
       - name: Start LocalStack (detached) con DEBUG
         run: |
-          IMAGE=localstack/localstack-pro:4.3.0
+          IMAGE=localstack/localstack-pro:latest
           DEBUG=1 localstack start --detached --image $IMAGE \
             --volume $(pwd)/ready.d:/etc/localstack/init/ready.d/00-baseline \
             --volume "$LOCALSTACK_VOLUME_DIR:/var/lib/localstack"
