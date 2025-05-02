@@ -35,7 +35,12 @@ jobs:
 
       - name: Ensure volume dir
         run: mkdir -p "$LOCALSTACK_VOLUME_DIR"
-
+      
+      - name: Create dummy machine.json (to reproduce error)
+        run: |
+          mkdir -p ~/.cache/localstack-cli
+          echo '{}' > ~/.cache/localstack-cli/machine.json
+      
       - name: Start LocalStack (detached)
         run: |
           localstack start --detached \
