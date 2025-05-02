@@ -14,9 +14,6 @@ jobs:
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
       AWS_SESSION_TOKEN: test
-      WORKLOAD_NAME: test-workload-1
-      APP_NAME: ssawyer-8575
-      PLATFORM_VERSION: "2"
       LOCALSTACK_PERSISTENCE: "1"
       LOCALSTACK_SNAPSHOT_LOAD_STRATEGY: MANUAL
       LOCALSTACK_SNAPSHOT_SAVE_STRATEGY: SCHEDULED
@@ -27,7 +24,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install LocalStack 4.3.0 (runtime + CLI)
+      - name: Install LocalStack 4.3.0
         run: |
           python -m pip install --upgrade pip
           python -m pip install "localstack==4.3.0"
@@ -36,10 +33,12 @@ jobs:
       - name: Ensure volume dir
         run: mkdir -p "$LOCALSTACK_VOLUME_DIR"
 
-      - name: Create dummy machine.json (to reproduce error)
+      # 👉  crea ambos archivos de caché
+      - name: Create dummy cache files (license & machine)
         run: |
           sudo mkdir -p /root/.cache/localstack-cli
           echo '{}' | sudo tee /root/.cache/localstack-cli/machine.json
+          echo '{"license_key":"dummy"}' | sudo tee /root/.cache/localstack-cli/license.json
 
       - name: Start LocalStack (detached) con DEBUG
         run: |
