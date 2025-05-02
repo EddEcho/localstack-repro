@@ -8,28 +8,18 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Token Pro (si lo usas)
       LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
-
-      # Credenciales dummy AWS
       AWS_DEFAULT_REGION: us-east-1
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
       AWS_SESSION_TOKEN: test
-
-      # Flags de LocalStack
       LOCALSTACK_PERSISTENCE: "1"
       LOCALSTACK_SNAPSHOT_LOAD_STRATEGY: MANUAL
       LOCALSTACK_SNAPSHOT_SAVE_STRATEGY: SCHEDULED
       LOCALSTACK_ENABLE_CODEX: "1"
-
-      # Directorio que montaremos en /var/lib/localstack
       LOCALSTACK_VOLUME_DIR: ${{ github.workspace }}/.sxm/localstack-volume
-
-      # 👉 Imagen que quieres probar (pública 4.3.0 por defecto).
-      #    Cambia a la privada del cliente cuando tengas acceso.
-      IMAGE_NAME: localstack/localstack-pro:4.3.0
+      IMAGE_NAME: docker.cpartifactory.corp.siriusxm.com/sxm-localstack-pro:4.3.1.dev70  # ✅ Imagen problemática
 
     steps:
       - name: Checkout repo
@@ -44,13 +34,11 @@ jobs:
       - name: Ensure volume dir
         run: mkdir -p "$LOCALSTACK_VOLUME_DIR"
 
-      # Creamos archivos de caché en la ruta usada por la CLI (/home/runner)
       - name: Create dummy cache files (license & machine)
-        run: |
-          CACHE_DIR=/home/runner/.cache/localstack-cli
-          mkdir -p "$CACHE_DIR"
-          echo '{}' > "$CACHE_DIR/machine.json"
-          echo '{"license_key":"dummy"}' > "$CACHE_DIR/license.json"
+        run: |  # ✅ Monta en /root/.cache (no /home/runner)
+          sudo mkdir -p /root/.cache/localstack-cli
+          echo '{}' | sudo tee /root/.cache/localstack-cli/machine.json
+          echo '{"license_key":"dummy"}' | sudo tee /root/.cache/localstack-cli/license.json
 
       - name: Start LocalStack (detached) con DEBUG
         run: |
