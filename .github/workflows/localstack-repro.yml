@@ -1,4 +1,4 @@
-name: lOcalstack-repro
+name: Reproducir error LocalStack machine.json
 
 on:
   workflow_dispatch:
@@ -8,29 +8,33 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # 👉 Ajusta tu token si lo necesitas
+      # Token Pro (si lo usas)
       LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
 
+      # Credenciales dummy AWS
       AWS_DEFAULT_REGION: us-east-1
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
       AWS_SESSION_TOKEN: test
 
-      # Persistencia y flags habituales
+      # Flags de LocalStack
       LOCALSTACK_PERSISTENCE: "1"
       LOCALSTACK_SNAPSHOT_LOAD_STRATEGY: MANUAL
       LOCALSTACK_SNAPSHOT_SAVE_STRATEGY: SCHEDULED
       LOCALSTACK_ENABLE_CODEX: "1"
 
-      # Directorio de volumen que montaremos en /var/lib/localstack
+      # Directorio que montaremos en /var/lib/localstack
       LOCALSTACK_VOLUME_DIR: ${{ github.workspace }}/.sxm/localstack-volume
+
+      # 👉 Imagen que quieres probar (pública 4.3.0 por defecto).
+      #    Cambia a la privada del cliente cuando tengas acceso.
+      IMAGE_NAME: localstack/localstack-pro:4.3.0
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Instalamos LocalStack 4.3.0 (CLI y runtime en un solo paquete)
       - name: Install LocalStack 4.3.0
         run: |
           python -m pip install --upgrade pip
@@ -40,7 +44,7 @@ jobs:
       - name: Ensure volume dir
         run: mkdir -p "$LOCALSTACK_VOLUME_DIR"
 
-      # 👉 Creamos archivos dummy de caché en la ruta que usará la CLI (/home/runner)
+      # Creamos archivos de caché en la ruta usada por la CLI (/home/runner)
       - name: Create dummy cache files (license & machine)
         run: |
           CACHE_DIR=/home/runner/.cache/localstack-cli
@@ -48,15 +52,12 @@ jobs:
           echo '{}' > "$CACHE_DIR/machine.json"
           echo '{"license_key":"dummy"}' > "$CACHE_DIR/license.json"
 
-      # Arrancamos LocalStack con DEBUG para ver el docker create completo
       - name: Start LocalStack (detached) con DEBUG
         run: |
-          IMAGE=localstack/localstack-pro:latest
-          DEBUG=1 localstack start --detached --image $IMAGE \
-            --volume $(pwd)/ready.d:/etc/localstack/init/ready.d/00-baseline \
+          DEBUG=1 localstack start --detached \
+            --volume "$(pwd)/ready.d:/etc/localstack/init/ready.d/00-baseline" \
             --volume "$LOCALSTACK_VOLUME_DIR:/var/lib/localstack"
-          echo "Esperando que suba…"
-          sleep 15
+          echo "Esperando que suba…"; sleep 15
 
       - name: Print LocalStack logs
         run: localstack logs
