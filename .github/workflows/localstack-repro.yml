@@ -42,6 +42,7 @@ jobs:
 
       - name: Start LocalStack (detached) con DEBUG
         run: |
+          IMAGE=localstack/localstack-pro:4.3.0  
           DEBUG=1 localstack start --detached \
             --volume $(pwd)/ready.d:/etc/localstack/init/ready.d/00-baseline \
             --volume "$LOCALSTACK_VOLUME_DIR:/var/lib/localstack"
